@@ -1,0 +1,36 @@
+minikube --vm-driver=virtualbox start
+dave@brown:~/code/skyliner-trial/counter> docker build -t counter .
+
+------
+
+Pod - all containers in a pod run as if they're on the same pre-container host
+ - shared IP address, port space
+ - find each other over "localhost", IPC
+ - shared volumes
+
+Thus, the chain is like following: Deployment -> Replica Set -> Pod(s).
+
+------
+
+$ kubectl label pods explorer foo=bar
+pod "explorer" labeled
+$ kubectl get pods --show-labels
+
+# doesnt work?
+$ kubectl expose pod explorer --port=8080 --name=explorer-service
+
+# exposes random port on minikube host
+$ kubectl expose pod explorer --port=8080 --name=explorer-service --container-port=8080 --type=NodePort 
+
+# get logs from a pod
+$ kubectl logs counter-f7b69cb96-gxrqh
+
+# dynamic minikube host and service port
+$ curl $(minikube ip):$(kubectl get service counter --output='jsonpath={.spec.ports[0].nodePort}')/counter
+
+# get NodePort URL for service
+$ minikube service counter --url
+http://192.168.99.101:31376
+
+# run a command on a pod
+$ kubectl exec -ti 'counter-65785c9979-t7t4c' -- ls -la 

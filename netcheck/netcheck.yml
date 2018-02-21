@@ -1,0 +1,56 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: netcheck
+  labels:
+    app: netcheck
+    tier: frontend
+spec:
+  # if your cluster supports it, uncomment the following to automatically create
+  # an external load-balanced IP for the frontend service.
+  #type: LoadBalancer
+  type: NodePort
+  ports:
+  - port: 8008
+  selector:
+    app: netcheck
+    tier: frontend
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: netcheck
+spec:
+  replicas: 1
+#  hostAliases:
+#    - ip: "10.0.2.2"
+#      hostnames:
+#        - "postgres"
+  template:
+    metadata:
+      labels:
+        app: netcheck
+        tier: frontend
+    spec:
+      containers:
+      - name: netcheck
+        image: netcheck
+        imagePullPolicy: IfNotPresent
+        resources:
+          requests:
+            cpu: 100m
+            memory: 100Mi
+        env:
+        - name: GET_HOSTS_FROM
+          value: dns
+          # If your cluster config does not include a dns service, then to
+          # instead access an environment variable to find the master
+          # service's host, comment out the 'value: dns' line above, and
+          # uncomment the line below:
+          # value: env
+        - name: FOO_BAR
+          value: "baz"
+        - name: DB_HOST
+          value: "10.0.2.2"
+        ports:
+        - containerPort: 8008
